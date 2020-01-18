@@ -2,6 +2,7 @@ import itertools
 import requests
 from bs4 import BeautifulSoup as bs
 from collections import Counter
+import re
 
 
 def main(session, HEADERS, limit_articles=100, initial_page=0):
@@ -88,32 +89,40 @@ if __name__ == "__main__":
         "User-Agent": 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:71.0) Gecko/'
                       '20100101 Firefox/71.0',
     }
-    url = "https://realty.yandex.ru/sankt-peterburg_i_leningradskaya_oblast/kupit/kvartira/?page=1"
+
+    url0 = "https://realty.yandex.ru/sankt-peterburg/kupit/kvartira/?priceType=PER_METER&page=1"  # url1
+    url = "https://realty.yandex.ru/sankt-peterburg/kupit/kvartira/?page=1"  #url2
+    url0 = "https://realty.yandex.ru/sankt-peterburg_i_leningradskaya_oblast/kupit/kvartira/?page=1"  # url3
     session = requests.Session()
     resp = session.get(url, headers=HEADERS)
     if resp.status_code == 200:
         soup = bs(resp.content, "html.parser")
         print(soup.title)
-        address = soup.findAll("div", {"class": "OffersSerpItem__address"})
-        with open ("addres.txt", "w") as addr:
-            for i in address:
-                print(i.text, file=addr)
-        price = soup.findAll()
-        # print(address)
-
+        # address = soup.findAll("div", {"class": "OffersSerpItem__address"})
+        # with open ("addres.txt", "w") as addr:
+        #     for i in address:
+        #         print(i.text, file=addr)
+        pattern = "\d+"
         inner_info = soup.findAll("div", {"class": "OffersSerpItem__info-inner"})
         print(len(inner_info))
-        for info in inner_info:
-            print(info.prettify())
-            address = info.findAll("div", {"class": "OffersSerpItem__address"})
-            price = info.findAll("span", {"class": "price"})
-            price_m2 = info.findAll("div", {"class": "OffersSerpItem__price-detail"})
-            apartment_area = info.findAll("h3", {"class": "OffersSerpItem__title"})
-            print(address)
-            print(price)
-            print(price_m2)
-            print(apartment_area)
-            print()
+        city = "Санкт-Петербург"
+        with open("SPb_addres_price.txt", "w") as addr:
+            for info in inner_info:
+                print(info.prettify())
+                address = info.findAll("div", {"class": "OffersSerpItem__address"})
+                price = info.findAll("span", {"class": "price"})  # цена, ктороая будет показана, если не за м2
+                price_m2 = info.findAll("div", {"class": "OffersSerpItem__price-detail"})  # цена снизу
+                price_m2up = info.findAll("div", {"class": "Price OffersSerpItem__price"})
+                apartment_area = info.findAll("h3", {"class": "OffersSerpItem__title"})
+                print(address[0].text)
+                print(price)
+                print(price_m2[0].text)
+                print(int("".join(re.findall(pattern, price_m2[0].text))))
+                print(price_m2up)
+                print(apartment_area)
+                print(f"{city}, {address[0].text}", "|", int("".join(re.findall(pattern, price_m2[0].text))), file=addr)  #url2
+                # if "Санкт-Петербург" in address[0].text:  # url3
+                #     print(address[0].text, "|", int("".join(re.findall(pattern, price_m2[0].text))), file=addr)
 
     # tags_list, head_article = main(session, HEADERS, limit_articles=100)
     # sort_count_words = counter(tags_list)
@@ -121,7 +130,3 @@ if __name__ == "__main__":
     # print(note_str)
     # with open("result.txt", "w") as result:
     #     result.write(note_str)
-
-"""
-https://realty.yandex.ru/moskva_i_moskovskaya_oblast/kupit/kvartira/?utm_source=google_adwords&utm_medium=cpc&utm_campaign=poisk_msk-r1_sell&utm_content=sell_campaign_msk_kvartira-kupit&utm_term=&gclid=Cj0KCQiA04XxBRD5ARIsAGFygj_4Rlbpf_gXHzmH6U67YcnYaDh-ko0bEPy5QquVn0GVfT1Wd1aFbBQaAsA0EALw_wcB
-"""
