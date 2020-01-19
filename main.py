@@ -3,7 +3,8 @@ import requests
 from bs4 import BeautifulSoup as bs
 from collections import Counter
 import re
-
+import pandas as pd
+import time
 
 def main(session, HEADERS, limit_articles=100, initial_page=0):
     """Функция, кторая вернет список всех найденных
@@ -75,6 +76,77 @@ def final_str_for_writing(sort_count_words, elements=None):
     return note_str
 
 
+def create_colums(columns, filename):
+    """
+
+    :param columns:
+    :param filename:
+    :return:
+    """
+    df = pd.DataFrame(columns=columns)
+    df.to_csv(filename, index=False)
+
+def first_pars(resp):
+    """
+
+    :param resp:
+    :return:
+    """
+    soup = bs(resp.content, "html.parser")
+    return soup.findAll("div", {"class": "OffersSerpItem__info-inner"})
+
+
+def second_pars(inner_info, city,pattern = "\d+"):
+    """
+
+    :param inner_info:
+    :param pattern:
+    :param city:
+    :return:
+    """
+    adddata = []
+    for info in inner_info:
+        address = info.findAll("div", {"class": "OffersSerpItem__address"})
+        price_m2 = info.findAll("div", {"class": "OffersSerpItem__price-detail"})  # цена снизу
+        data = [f"{city}, {address[0].text}", int("".join(re.findall(pattern, price_m2[0].text)))]
+        adddata.append(data)
+    return adddata
+
+
+def search_data(routs,city,concat_name, limit_page, page, filename):
+    while page < limit_page:
+        time.sleep(10)
+        url = f"https://realty.yandex.ru/{routs[city]}/kupit/kvartira/?page={page}"  # url2
+        page += 1
+        print("cuurent page", page)
+        session = requests.Session()
+        resp = session.get(url, headers=HEADERS)
+        if resp.status_code == 200:
+            inner_info = first_pars(resp)
+            app_data = second_pars(inner_info, city=concat_name)
+        df2 = pd.DataFrame(app_data, columns=columns)
+        df2.to_csv(filename, mode="a", header=False, index=False)
+
+def save_data(data, columns, filename):
+    """
+
+    :param data:
+    :param columns:
+    :param filename:
+    :return:
+    """
+    df2 = pd.DataFrame(data, columns=columns)
+    df2.to_csv(filename, mode="a", header=False, index=False)
+
+def read_pdframe(filename):
+    df = pd.read_csv(filename, sep=",")
+    return df
+
+def geoYandex(data):
+    for _, adr in enumerate(data):
+        addr = adr
+
+
 if __name__ == "__main__":
 
     COOKIE = ""
@@ -90,43 +162,33 @@ if __name__ == "__main__":
                       '20100101 Firefox/71.0',
     }
 
-    url0 = "https://realty.yandex.ru/sankt-peterburg/kupit/kvartira/?priceType=PER_METER&page=1"  # url1
-    url = "https://realty.yandex.ru/sankt-peterburg/kupit/kvartira/?page=1"  #url2
-    url0 = "https://realty.yandex.ru/sankt-peterburg_i_leningradskaya_oblast/kupit/kvartira/?page=1"  # url3
-    session = requests.Session()
-    resp = session.get(url, headers=HEADERS)
-    if resp.status_code == 200:
-        soup = bs(resp.content, "html.parser")
-        print(soup.title)
-        # address = soup.findAll("div", {"class": "OffersSerpItem__address"})
-        # with open ("addres.txt", "w") as addr:
-        #     for i in address:
-        #         print(i.text, file=addr)
-        pattern = "\d+"
-        inner_info = soup.findAll("div", {"class": "OffersSerpItem__info-inner"})
-        print(len(inner_info))
-        city = "Санкт-Петербург"
-        with open("SPb_addres_price.txt", "w") as addr:
-            for info in inner_info:
-                print(info.prettify())
-                address = info.findAll("div", {"class": "OffersSerpItem__address"})
-                price = info.findAll("span", {"class": "price"})  # цена, ктороая будет показана, если не за м2
-                price_m2 = info.findAll("div", {"class": "OffersSerpItem__price-detail"})  # цена снизу
-                price_m2up = info.findAll("div", {"class": "Price OffersSerpItem__price"})
-                apartment_area = info.findAll("h3", {"class": "OffersSerpItem__title"})
-                print(address[0].text)
-                print(price)
-                print(price_m2[0].text)
-                print(int("".join(re.findall(pattern, price_m2[0].text))))
-                print(price_m2up)
-                print(apartment_area)
-                print(f"{city}, {address[0].text}", "|", int("".join(re.findall(pattern, price_m2[0].text))), file=addr)  #url2
-                # if "Санкт-Петербург" in address[0].text:  # url3
-                #     print(address[0].text, "|", int("".join(re.findall(pattern, price_m2[0].text))), file=addr)
+    routs = {"SPb": "sankt-peterburg", "MSK": "moskva", "EKB":"ekaterinburg"}
+    columns = ["address", "price"]
 
-    # tags_list, head_article = main(session, HEADERS, limit_articles=100)
-    # sort_count_words = counter(tags_list)
-    # note_str = final_str_for_writing(sort_count_words)
-    # print(note_str)
-    # with open("result.txt", "w") as result:
-    #     result.write(note_str)
+    city_abr = "SPb"
+    rus_name = "Санкт-Петербург"
+    filename = f"{city_abr}_address_price.csv"
+    create_colums(columns, filename=filename)
+    search_data(routs, limit_page=24, page=0, city=f"{city_abr}", concat_name=f"{rus_name}", filename=filename)
+    df = pd.read_csv(filename, sep=",")
+    print(len(df))
+    geoYandex(df)
+
+    city_abr = "MSK"
+    rus_name = "Москва"
+    filename = f"{city_abr}_address_price.csv"
+    create_colums(columns, filename=filename)
+    search_data(routs, limit_page=24, page=0, city=f"{city_abr}", concat_name=f"{rus_name}", filename=filename)
+    df = pd.read_csv(filename, sep=",")
+    print(len(df))
+
+    city_abr = "EKB"
+    rus_name = "Екатеринбург"
+    filename = f"{city_abr}_address_price.csv"
+    create_colums(columns, filename=filename)
+    search_data(routs, limit_page=24, page=0, city=f"{city_abr}", concat_name=f"{rus_name}", filename=filename)
+    df = pd.read_csv(filename, sep=",")
+    print(len(df))
+
+
+
