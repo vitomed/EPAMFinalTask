@@ -1,7 +1,5 @@
-import itertools
 import requests
 from bs4 import BeautifulSoup as bs
-from collections import Counter
 import re
 import pandas as pd
 import time
@@ -58,7 +56,7 @@ def search_data(routs,city,concat_name, limit_page, page, filename):
     """
     while page < limit_page:
         time.sleep(10)
-        url = f"https://realty.yandex.ru/{routs[city]}/kupit/kvartira/?page={page}"  # url2
+        url = f"https://realty.yandex.ru/{routs[city]}/kupit/kvartira/?page={page}"
         page += 1
         print("cuurent page", page)
         session = requests.Session()
@@ -67,8 +65,8 @@ def search_data(routs,city,concat_name, limit_page, page, filename):
             inner_info = first_pars(resp)
             app_data = second_pars(inner_info, city=concat_name)
             print(app_data)
-        df2 = pd.DataFrame(app_data, columns=columns)
-        df2.to_csv(filename, mode="a", header=False, index=False)
+        df = pd.DataFrame(app_data, columns=columns)
+        df.to_csv(filename, mode="a", header=False, index=False)
 
 
 def save_data(data, columns, filename):
@@ -110,28 +108,17 @@ if __name__ == "__main__":
     routs = {"SPb": "sankt-peterburg", "MSK": "moskva", "EKB":"ekaterinburg"}
     columns = ["address", "price"]
 
-    # city_abr = "SPb"
-    # rus_name = "Санкт-Петербург"
-    # filename = f"{city_abr}_address_price.csv"
-    # # create_colums(columns, filename=filename)
-    # # search_data(routs, limit_page=24, page=0, city=f"{city_abr}", concat_name=f"{rus_name}", filename=filename)
-    # df = pd.read_csv(filename, sep=",")
-    # print(len(df))
-    # geoYandex(df)
+    def main(routs, columns, c_abr, r_name, s_page, f_page):
+        f_name = f"{c_abr}_address_price.csv"
+        create_colums(columns, filename=f_name)
+        search_data(routs, limit_page=f_page, page=s_page, city=f"{c_abr}", concat_name=f"{r_name}", filename=f_name)
+        df = pd.read_csv(f_name, sep=",")
+        print(len(df))
+        print(len(df.address.unique()))
+        print(len(df.price.unique()))
 
-    # city_abr = "MSK"
-    # rus_name = "Москва"
-    # filename = f"{city_abr}_address_price.csv"
-    # create_colums(columns, filename=filename)
-    # search_data(routs, limit_page=24, page=0, city=f"{city_abr}", concat_name=f"{rus_name}", filename=filename)
-    # df = pd.read_csv(filename, sep=",")
-    # print(len(df))
-    #
-    # city_abr = "EKB"
-    # rus_name = "Екатеринбург"
-    # filename = f"{city_abr}_address_price.csv"
-    # create_colums(columns, filename=filename)
-    # search_data(routs, limit_page=24, page=0, city=f"{city_abr}", concat_name=f"{rus_name}", filename=filename)
-    # df = pd.read_csv(filename, sep=",")
-    # print(len(df))
+    main(routs=routs, columns=columns, c_abr="SPb", r_name="Санкт-Петербург", s_page=1, f_page=5)
+    # main(routs=routs, columns=columns, c_abr="EKB", r_name="Екатеринбург", s_page=1, f_page=3)
+    # main(routs=routs, columns=columns, c_abr="MSK", r_name="Москва", s_page=0, f_page=2)
+
 

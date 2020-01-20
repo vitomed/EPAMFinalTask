@@ -33,9 +33,11 @@ def create_list_lon_lat(list_addr):
     """
     lon_lat = []
     for adr in list_addr:
-        time.sleep(5)
-        longlat_latlong = lon_lat_handler(Client, adr)
-        add_lon_lat = [longlat_latlong[0], longlat_latlong[1]]
+        # time.sleep(0.5)
+        latitude_longtitude = lon_lat_handler(Client, adr)
+        print("1",latitude_longtitude)
+        add_lon_lat = [latitude_longtitude[1], latitude_longtitude[0]]
+        print("2", add_lon_lat)
         lon_lat.append(add_lon_lat)
 
     return lon_lat
@@ -69,6 +71,20 @@ def add_data_to_df(df, list_lon_lat, filename, columns_name):
     new_df.to_csv(filename, index=False)
 
 
+def main(c_abbr):
+    """
+
+    :param c_abbr:
+    :return:
+    """
+    filename = f"{c_abbr}_address_price.csv"
+    list_addr, df = get_addr(f_name=filename)
+    lon_lat = create_list_lon_lat(list_addr)
+    print(lon_lat)
+    save_data(lon_lat, columns=["latitude", "longitude"], filename=f"{c_abbr}_lon_lat.csv")
+    add_data_to_df(df, list_lon_lat=lon_lat, filename=f"{c_abbr}_addr_pr_lon_lat.csv",
+                   columns_name=["latitude", "longitude"])
+
 if __name__ == "__main__":
 
     with open("apikey.txt", "r") as key_file:
@@ -77,9 +93,5 @@ if __name__ == "__main__":
     api_url = f"https://geocode-maps.yandex.ru/1.x?apikey={key}"
     setattr(Client, "API_URL", api_url)
 
-    filename = "SPb_address_price.csv"
-    list_addr, df = get_addr(f_name=filename)
-    lon_lat = create_list_lon_lat(list_addr)
-    save_data(lon_lat, columns=["longitude", "latitude"], filename="Spb_lon_lat.scv")
-    add_data_to_df(df, list_lon_lat=lon_lat, filename="SPb_addr_pr_lon_lat.csv", columns_name=["longitude", "latitude"])
-
+    city_abbr_exmpl = ["SPb", "MSK", "EKB"]
+    main("SPb")

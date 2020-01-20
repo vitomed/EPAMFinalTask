@@ -22,7 +22,7 @@ def save_data(data_lon_lat, columns, filename):
 
 
 lon_lat = lon_lat(list)
-save_data(lon_lat, columns=["add3", "add4"], filename="new.csv")
+save_data(lon_lat, columns=["add1", "add2"], filename="old.csv")
 
 df = pd.read_csv("old.csv", sep=",")
 
@@ -33,7 +33,7 @@ def add_data_df(df, list_lon_lat, filename, columns_name):
     new_df.to_csv(filename, index=False)
 
 
-add_data_df(df, lon_lat, filename="old.csv", columns_name=["add3", "add6"])
+# add_data_df(df, lon_lat, filename="old.csv", columns_name=["add3", "add6"])
 
-df = pd.read_csv("test_lon_lat.csv", sep=",")
-print(df)
+# df = pd.read_csv("test_lon_lat.csv", sep=",")
+# print(df)
