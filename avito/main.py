@@ -112,8 +112,8 @@ if __name__ == "__main__":
         print(len(df.address.unique()))
         print(len(df.price.unique()))
 
-    # main(routs=routs, columns=columns, c_abr="SPb", r_name="Санкт-Петербург", s_page=1, f_page=5)
+    main(routs=routs, columns=columns, c_abr="SPb", r_name="Санкт-Петербург", s_page=1, f_page=2)
     # main(routs=routs, columns=columns, c_abr="EKB", r_name="Екатеринбург", s_page=1, f_page=3)
-    main(routs=routs, columns=columns, c_abr="MSK", r_name="Москва", s_page=1, f_page=3)
+    # main(routs=routs, columns=columns, c_abr="MSK", r_name="Москва", s_page=1, f_page=3)
 
 
