@@ -32,7 +32,10 @@ def create_list_lon_lat(list_addr):
     :return: lon, lat
     """
     lon_lat = []
+    count = 0
     for adr in list_addr:
+        count += 1
+        print(count)
         # time.sleep(5)
         longlat_latlong = lon_lat_handler(Client, adr)
         add_lon_lat = [longlat_latlong[0], longlat_latlong[1]]
@@ -77,11 +80,5 @@ if __name__ == "__main__":
     api_url = f"https://geocode-maps.yandex.ru/1.x?apikey={key}"
     setattr(Client, "API_URL", api_url)
     list_city_abbr = ["MSK", "EKB"]  #  add "SPb"
-    for abbr in list_city_abbr:
-        filename = f"{abbr}_address_price.csv"
-        list_addr, df = get_addr(f_name=filename)
-        lon_lat = create_list_lon_lat(list_addr)
-        save_data(lon_lat, columns=["longitude", "latitude"], filename="Spb_lon_lat.csv")
-        add_data_to_df(df, list_lon_lat=lon_lat, filename=f"{abbr}_addr_pr_lon_lat.csv",
-                       columns_name=["longitude", "latitude"])
+    
 
