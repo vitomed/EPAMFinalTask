@@ -81,7 +81,7 @@ if __name__ == "__main__":
         filename = f"{abbr}_address_price.csv"
         list_addr, df = get_addr(f_name=filename)
         lon_lat = create_list_lon_lat(list_addr)
-        save_data(lon_lat, columns=["longitude", "latitude"], filename="Spb_lon_lat.scv")
+        save_data(lon_lat, columns=["longitude", "latitude"], filename="Spb_lon_lat.csv")
         add_data_to_df(df, list_lon_lat=lon_lat, filename=f"{abbr}_addr_pr_lon_lat.csv",
                        columns_name=["longitude", "latitude"])
 
