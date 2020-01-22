@@ -1,17 +1,7 @@
-from yandex_geocoder import Client
 import pandas as pd
 import time
-
-
-def lon_lat_handler(client, addr):
-    """
-
-    :param client:
-    :param addr:
-    :return:
-    """
-    answer = client.coordinates(addr)
-    return answer
+from yandex_geocoder import Client
+from yandex_geocoder.exceptions import YandexGeocoderAddressNotFound
 
 
 def get_addr(f_name):
@@ -25,43 +15,33 @@ def get_addr(f_name):
     return addr, df
 
 
-def create_list_lon_lat(list_addr):
+def lon_lat_handler(client, addr):
     """
 
-    :param list_addr:
-    :return: lon, lat
+    :param client:
+    :param addr:
+    :return:
     """
-    lon_lat = []
-    del_adr = []
+    try:
+        answer = client.coordinates(addr)
+    except YandexGeocoderAddressNotFound:
+        answer = (None, None)
+    return answer
+
+
+def create_list_lon_lat(list_addr, client):
+    add_lon_lat = []
     count = 0
     for adr in list_addr:
-        # time.sleep(0.5)
-        try:
-            latitude_longtitude = lon_lat_handler(Client, adr)
-        except Exception as e:
-            print(f"Exc for {adr} and count {count}")
-            del_adr.append(adr)  # append for remove data
-            print(e)
-            break
-        else:
-            add_lon_lat = [latitude_longtitude[1], latitude_longtitude[0]]
-            lon_lat.append(add_lon_lat)
-        finally:
-            count += 1
-            print(count)
-            # lon_lat.append(add_lon_lat)
-    print(f" assertion len: {len(list_addr)} == {len(lon_lat)} + {len(del_adr)}")
-    return lon_lat, del_adr
+        latitude_longtitude = lon_lat_handler(client, adr)
+        lon_lat = [latitude_longtitude[1], latitude_longtitude[0]]
+        add_lon_lat.append(lon_lat)
+        count += 1
+        print(count)
+    return add_lon_lat
 
 
-def drop_not_found_adr(df, del_adr):
-    print("before drop", len(df["address"].isin(del_adr)))
-    mask = df["address"].isin(del_adr) == False
-    print(("after drop", len(df[mask])))
-    return df[mask]
-
-
-def save_data(data, columns, filename):
+def save_lon_lat_as_df(data, columns, filename):
     """
 
     :param data:
@@ -70,23 +50,20 @@ def save_data(data, columns, filename):
     :return:
     """
     df = pd.DataFrame(data, columns=columns)
-    df_common_fin = df.dropna(axis='index', how='any', subset=['longtitude'])
     print("info lon_lat df", df.info())
     df.to_csv(filename, index=False)
 
 
-def add_data_to_df(df, list_lon_lat, filename, columns_name):
-    """
-
-    :param df:
-    :param list_lon_lat:
-    :param filename:
-    :param columns_name:
-    :return:
-    """
+def add_new_columns(df, list_lon_lat, columns_name):
     add_df = pd.DataFrame(list_lon_lat, columns=columns_name)
+    # print(add_df)
     new_df = pd.concat([df, add_df], sort=False, axis=1)
-    new_df.to_csv(filename, index=False)
+    # print(new_df)
+    df_common_fin = new_df.dropna(axis='index', how='any', subset=['longtitude'])
+    print(df_common_fin)
+    return df_common_fin
+    # print("add", df_common_fin.info())
+    # df_common_fin.to_csv(filename, index=False)
 
 
 def main(c_abbr):
@@ -95,29 +72,18 @@ def main(c_abbr):
     :param c_abbr:
     :return:
     """
-    filename = f"{c_abbr}_addr_area_price.csv"
-    list_addr, df = get_addr(f_name=filename)
-    lon_lat, del_adr = create_list_lon_lat(list_addr)
-    clear_df = drop_not_found_adr(df, del_adr)
-    save_data(data=lon_lat, columns=["longtitude", "latitude"], filename=f"{c_abbr}_lon_lat.csv")
-    add_data_to_df(clear_df, list_lon_lat=lon_lat, filename=f"{c_abbr}_addr_area_price_lon_lat.csv",
-                   columns_name=["longtitude", "latitude"])
+    filename = f"{c_abbr}/{c_abbr}_addr_area_price.csv"
 
+    list_addr, df_main = get_addr(f_name=filename)
 
-def insert_row(df, row_number, row_value, f_name):
-    df.to_csv(f_name, index=True)
-    df = pd.read_csv(f_name, sep=",")
+    lon_lat = create_list_lon_lat(list_addr, Client)
 
-    df1 = df[:row_number]
-    df2 = df[row_number:]
-    print(df1.loc[:])
+    save_lon_lat_as_df(data=lon_lat, columns=["longtitude", "latitude"], filename=f"{c_abbr}/{c_abbr}_lon_lat.csv")
 
-    # df_result = pd.concat([df1, df2], sort=False)
-    # print(df_result.shape())
-    # print(df.index)
-    # print(df.shape[0])
-    # df.index = [*range(df.shape[0])]
-    # df_result.to_csv(f_name, index=False)
+    df_full = add_new_columns(df_main, list_lon_lat=lon_lat, columns_name=["longtitude", "latitude"])
+
+    df_full.to_csv(f"{c_abbr}/{c_abbr}_addr_area_price_lon_lat.csv", index=False)
+
 
 if __name__ == "__main__":
 
