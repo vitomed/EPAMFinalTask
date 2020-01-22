@@ -110,8 +110,8 @@ def main(routs, columns, c_abr, r_name, curr_page, f_page):
     while curr_page < f_page:
         data_list = search_data(routs, page=curr_page, city=f"{c_abr}", concat_name=f"{r_name}")
         saver(data_list, columns, f_name)
-        curr_page += 1
         print("page", curr_page)
+        curr_page += 1
 
     df = pd.read_csv(f_name, sep=",")
     updated_df = drop_addr_copy(df, column_name="address")
