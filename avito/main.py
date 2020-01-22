@@ -56,7 +56,10 @@ def second_pars(inner_info, city, pattern = "\d+"):
 
 def update_df(data, columns, f_name):
     """
-
+    Если есть необходимость оставить только уникальные адреса,
+    то воспользуйтесь этой функцией. Она удалит все повторения
+    встречающиеся в столбце address и оставит только уникальные
+    значения
     :param data:
     :param columns:
     :param filename:
@@ -65,14 +68,13 @@ def update_df(data, columns, f_name):
     df = pd.DataFrame(data, columns=columns)
     # df = df.drop_duplicates("address")
     df.drop_duplicates("address", inplace=True)
-    df.to_csv(f_name, mode="a", header=False, index=False)
+    return df
 
 
 def search_data(routs, city, concat_name, limit_page, page, save_f_name):
     while page < limit_page:
         # time.sleep(10)
         url = f"https://www.avito.ru/{routs[city]}/kvartiry/prodam/monolitnyy_dom?s=104&p={page}"
-        # "https://www.avito.ru/moskva/kvartiry/prodam/monolitnyy_dom?s=104&p=3"
         page += 1
         print("cuurent page", page)
         session = requests.Session()
@@ -82,16 +84,21 @@ def search_data(routs, city, concat_name, limit_page, page, save_f_name):
         except Exception as e:
             print(e)
         else:
+
             inner_info = first_pars(resp)
             add_data = second_pars(inner_info, city=concat_name)
-            update_df(add_data, columns=columns, f_name=save_f_name)
+            single_addr_df = update_df(add_data, columns=columns, f_name=save_f_name)
+
+            return single_addr_df
 
 
 
 def main(routs, columns, c_abr, r_name, s_page, f_page):
     f_name = f"{c_abr}_addr_area_price.csv"
-    # create_colums(columns, f_name=f_name)
-    # search_data(routs, limit_page=f_page, page=s_page, city=f"{c_abr}", concat_name=f"{r_name}", save_f_name=f_name)
+    create_colums(columns, f_name=f_name)
+    single_addr_df = search_data(routs, limit_page=f_page, page=s_page, city=f"{c_abr}",
+                                 concat_name=f"{r_name}", save_f_name=f_name)
+    single_addr_df.to_csv()
     df = pd.read_csv(f_name, sep=",")
     # print("size df", len(df))
     # print("size unique addr", len(df.address.unique()))

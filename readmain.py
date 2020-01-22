@@ -33,6 +33,14 @@ def add_data_df(df, list_lon_lat, filename, columns_name):
     new_df.to_csv(filename, index=False)
 
 
+clean_df = pd.read_csv("avito/MSK_addr_area_price_lon_lat.csv", sep=",")
+def cleaning(df):
+    print(len(df))
+    df_common_fin = df.dropna(axis='index', how='any', subset=['longitude'])
+    print(len(df_common_fin))
+
+cleaning(clean_df)
+
 # add_data_df(df, lon_lat, filename="old.csv", columns_name=["add3", "add6"])
 
 # df = pd.read_csv("test_lon_lat.csv", sep=",")
