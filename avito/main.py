@@ -41,14 +41,14 @@ def second_pars(inner_info, city, pattern = "\d+"):
             continue
 
         price = info.findAll("span", {"class": "price"})
-        area_m2 = info.findAll("a", {"class": "snippet-link"})
+        area = info.findAll("a", {"class": "snippet-link"})
         cost_of_housing = int("".join(re.findall(pattern, price[0].text)))
         try:
-            m2 = float(area_m2[0].text.split(",")[1][:-2].strip())
+            area_m2 = float(area[0].text.split(",")[1][:-2].strip())
         except Exception as e:
             print(e)
-        cost_m2 = round(cost_of_housing / m2)
-        data = [f"{city}, {address[0].text.strip()}", cost_m2]
+        cost_m2 = round(cost_of_housing / area_m2)
+        data = [f"{city}, {address[0].text.strip()}", area_m2, cost_m2]
         print(data)
         adddata.append(data)
     return adddata
@@ -63,14 +63,16 @@ def update_df(data, columns, f_name):
     :return:
     """
     df = pd.DataFrame(data, columns=columns)
-    df = df.drop_duplicates("address")
+    # df = df.drop_duplicates("address")
+    df.drop_duplicates("address", inplace=True)
     df.to_csv(f_name, mode="a", header=False, index=False)
 
 
 def search_data(routs, city, concat_name, limit_page, page, save_f_name):
     while page < limit_page:
         # time.sleep(10)
-        url = f"https://www.avito.ru/{routs[city]}/kvartiry/prodam?s=104&p={page}"
+        url = f"https://www.avito.ru/{routs[city]}/kvartiry/prodam/monolitnyy_dom?s=104&p={page}"
+        # "https://www.avito.ru/moskva/kvartiry/prodam/monolitnyy_dom?s=104&p=3"
         page += 1
         print("cuurent page", page)
         session = requests.Session()
@@ -85,21 +87,16 @@ def search_data(routs, city, concat_name, limit_page, page, save_f_name):
             update_df(add_data, columns=columns, f_name=save_f_name)
 
 
-def clear_df(f_name):
-    df = pd.read_csv(f_name, sep=",")
-    clear_df = df.drop_duplicates("address")
-    clear_df.to_csv(f_name, index=False)
-
 
 def main(routs, columns, c_abr, r_name, s_page, f_page):
-    f_name = f"{c_abr}_address_price.csv"
-    create_colums(columns, f_name=f_name)
-    search_data(routs, limit_page=f_page, page=s_page, city=f"{c_abr}", concat_name=f"{r_name}", save_f_name=f_name)
-    clear_df(f_name)
+    f_name = f"{c_abr}_addr_area_price.csv"
+    # create_colums(columns, f_name=f_name)
+    # search_data(routs, limit_page=f_page, page=s_page, city=f"{c_abr}", concat_name=f"{r_name}", save_f_name=f_name)
     df = pd.read_csv(f_name, sep=",")
-    print(len(df))
-    print(len(df.address.unique()))
-    print(len(df.price.unique()))
+    # print("size df", len(df))
+    # print("size unique addr", len(df.address.unique()))
+    # print("size unique price", len(df.price.unique()))
+    print(max(df.price), min(df.price))  # SPb 756144 40331, MSK 2837394 50000, 300000 12885
 
 
 if __name__ == "__main__":
@@ -118,10 +115,11 @@ if __name__ == "__main__":
     }
 
     routs = {"SPb": "sankt-peterburg", "MSK": "moskva", "EKB": "ekaterinburg"}
-    columns = ["address", "price"]
+
+    columns = ["address", "area", "price"]
 
     main(routs=routs, columns=columns, c_abr="SPb", r_name="Санкт-Петербург", s_page=1, f_page=100)
-    # main(routs=routs, columns=columns, c_abr="EKB", r_name="Екатеринбург", s_page=1, f_page=100)
-    # main(routs=routs, columns=columns, c_abr="MSK", r_name="Москва", s_page=1, f_page=100)
+    main(routs=routs, columns=columns, c_abr="MSK", r_name="Москва", s_page=1, f_page=100)
+    main(routs=routs, columns=columns, c_abr="EKB", r_name="Екатеринбург", s_page=1, f_page=100)
 
 

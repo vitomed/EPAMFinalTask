@@ -32,15 +32,25 @@ def create_list_lon_lat(list_addr):
     :return: lon, lat
     """
     lon_lat = []
+    del_adr = []
+    count = 0
     for adr in list_addr:
         # time.sleep(0.5)
-        latitude_longtitude = lon_lat_handler(Client, adr)
-        print("1",latitude_longtitude)
-        add_lon_lat = [latitude_longtitude[1], latitude_longtitude[0]]
-        print("2", add_lon_lat)
-        lon_lat.append(add_lon_lat)
-
-    return lon_lat
+        try:
+            latitude_longtitude = lon_lat_handler(Client, adr)
+        except Exception as e:
+            print(adr)
+            del_adr.append(adr)
+            print(e)
+        else:
+            # print("1", latitude_longtitude)
+            add_lon_lat = [latitude_longtitude[1], latitude_longtitude[0]]
+            # print("2", add_lon_lat)
+            lon_lat.append(add_lon_lat)
+        finally:
+            count += 1
+            print(count)
+    return lon_lat, del_adr
 
 
 def save_data(data_lon_lat, columns, filename):
@@ -79,8 +89,7 @@ def main(c_abbr):
     """
     filename = f"{c_abbr}_address_price.csv"
     list_addr, df = get_addr(f_name=filename)
-    lon_lat = create_list_lon_lat(list_addr)
-    print(lon_lat)
+    lon_lat, del_adr = create_list_lon_lat(list_addr)
     save_data(lon_lat, columns=["longitude", "latitude"], filename=f"{c_abbr}_lon_lat.csv")
     add_data_to_df(df, list_lon_lat=lon_lat, filename=f"{c_abbr}_addr_pr_lon_lat.csv",
                    columns_name=["longitude", "latitude"])
