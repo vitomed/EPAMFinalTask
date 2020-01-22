@@ -137,6 +137,6 @@ if __name__ == "__main__":
 
     # main(routs=city_routs, columns=columns, c_abr="SPb", r_name="Санкт-Петербург", curr_page=1, f_page=100)
     # main(routs=city_routs, columns=columns, c_abr="MSK", r_name="Москва", curr_page=1, f_page=100)
-    main(routs=city_routs, columns=columns, c_abr="EKB", r_name="Екатеринбург", curr_page=1, f_page=100)
+    # main(routs=city_routs, columns=columns, c_abr="EKB", r_name="Екатеринбург", curr_page=1, f_page=100)
 
 
