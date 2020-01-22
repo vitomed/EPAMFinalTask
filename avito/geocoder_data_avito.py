@@ -94,10 +94,10 @@ if __name__ == "__main__":
     setattr(Client, "API_URL", api_url)
 
     # city_abbr_exmpl = ["SPb", "MSK", "EKB"]
-    city_abbr_exmpl = ["MSK"]
+    city_abbr_exmpl = ["EKB"]
     # main("SPb")
-    main("MSK")
-    # main("EKB")
+    # main("MSK")
+    main("EKB")
     for i in city_abbr_exmpl:
 
         df1 = pd.read_csv(f"{i}/{i}_lon_lat.csv", sep=",")
