@@ -80,8 +80,6 @@ def drop_addr_copy(df, column_name):
 def search_data(routs, city, concat_name, page):
     # time.sleep(10)
     url = f"https://www.avito.ru/{routs[city]}/kvartiry/prodam/monolitnyy_dom?s=104&p={page}"
-    page += 1
-    print("cuurent page", page)
     session = requests.Session()
     resp = session.get(url, headers=HEADERS)
     try:
@@ -117,6 +115,7 @@ def main(routs, columns, c_abr, r_name, curr_page, f_page):
     updated_df = drop_addr_copy(df, column_name="address")
     updated_df.to_csv(f"{c_abr}/{c_abr}_updated_df.csv", index=False)
 
+
 if __name__ == "__main__":
 
     COOKIE = ""
@@ -136,8 +135,8 @@ if __name__ == "__main__":
 
     columns = ["address", "area", "price"]
 
-    main(routs=city_routs, columns=columns, c_abr="SPb", r_name="Санкт-Петербург", curr_page=1, f_page=100)
-    # main(routs=routs, columns=columns, c_abr="MSK", r_name="Москва", s_page=1, f_page=100)
-    # main(routs=routs, columns=columns, c_abr="EKB", r_name="Екатеринбург", s_page=1, f_page=100)
+    # main(routs=city_routs, columns=columns, c_abr="SPb", r_name="Санкт-Петербург", curr_page=1, f_page=100)
+    # main(routs=city_routs, columns=columns, c_abr="MSK", r_name="Москва", curr_page=1, f_page=100)
+    main(routs=city_routs, columns=columns, c_abr="EKB", r_name="Екатеринбург", curr_page=1, f_page=100)
 
 

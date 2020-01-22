@@ -100,10 +100,10 @@ if __name__ == "__main__":
     # main("EKB")
     for i in city_abbr_exmpl:
 
-        df1 = pd.read_csv(f"{i}_lon_lat.csv", sep=",")
+        df1 = pd.read_csv(f"{i}/{i}_lon_lat.csv", sep=",")
         print("len", len(df1))
 
-        df2 = pd.read_csv(f"{i}_addr_area_price_lon_lat.csv", sep=",")
+        df2 = pd.read_csv(f"{i}/{i}_addr_area_price_lon_lat.csv", sep=",")
         print("len", len(df2))
 
 
