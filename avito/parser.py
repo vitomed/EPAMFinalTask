@@ -1,16 +1,17 @@
+import pandas as pd
+import re
 import requests
 from bs4 import BeautifulSoup as bs
-import re
-import pandas as pd
-import time
 
 
 def create_colums(columns, f_name):
     """
+    An empty table is created with the column name,
+    which are transferred to variable columns and
+    stored in a file named f_name
 
-    :param columns:
-    :param filename:
-    :return:
+    :param columns: column name
+    :param filename: file name
     """
     df = pd.DataFrame(columns=columns)
     df.to_csv(f_name, index=False)
@@ -18,15 +19,16 @@ def create_colums(columns, f_name):
 
 def first_pars(resp):
     """
+    Search advertisement for apartments for sale
 
-    :param resp:
-    :return:
+    :param resp: pice of HTML page
+    :return: list advertisement
     """
     soup = bs(resp.content, "html.parser")
     return soup.findAll("div", {"class": "item__line"})
 
 
-def second_pars(inner_info, city, pattern = "\d+"):
+def second_pars(inner_info, city, pattern):
     """
 
     :param inner_info:
@@ -48,15 +50,15 @@ def second_pars(inner_info, city, pattern = "\d+"):
             area_m2 = float(area[0].text.split(",")[1][:-2].strip())
         except Exception as e:
             print(e)
-        cost_m2 = round(cost_of_housing / area_m2)
-        data = [f"{city}, {address[0].text.strip()}", area_m2, cost_m2]
-        print(data)
-        adddata.append(data)
+        else:
+            cost_m2 = round(cost_of_housing / area_m2)
+            data = [f"{city}, {address[0].text.strip()}", area_m2, cost_m2]
+            print(data)
+            adddata.append(data)
     return adddata
 
 
 def saver(data, columns, f_name):
-
     df = pd.DataFrame(data, columns=columns)
     df = df.drop_duplicates("address")
     df.to_csv(f_name, mode="a", header=False, index=False)
@@ -68,6 +70,7 @@ def drop_addr_copy(df, column_name):
     то воспользуйтесь этой функцией. Она удалит все повторения
     встречающиеся в столбце address и оставит только уникальные
     значения
+
     :param data:
     :param columns:
     :param filename:
@@ -78,7 +81,6 @@ def drop_addr_copy(df, column_name):
 
 
 def search_data(routs, city, concat_name, page):
-    # time.sleep(10)
     url = f"https://www.avito.ru/{routs[city]}/kvartiry/prodam/monolitnyy_dom?s=104&p={page}"
     session = requests.Session()
     resp = session.get(url, headers=HEADERS)
@@ -88,7 +90,7 @@ def search_data(routs, city, concat_name, page):
         print(e)
     else:
         inner_info = first_pars(resp)
-        add_data = second_pars(inner_info, city=concat_name)
+        add_data = second_pars(inner_info, city=concat_name, pattern="\b+")
         return add_data
 
 
@@ -138,5 +140,3 @@ if __name__ == "__main__":
     # main(routs=city_routs, columns=columns, c_abr="SPb", r_name="Санкт-Петербург", curr_page=1, f_page=100)
     # main(routs=city_routs, columns=columns, c_abr="MSK", r_name="Москва", curr_page=1, f_page=100)
     # main(routs=city_routs, columns=columns, c_abr="EKB", r_name="Екатеринбург", curr_page=1, f_page=100)
-
-
