@@ -10,7 +10,7 @@ def create_colums(columns, file_name):
     which are transferred to variable columns and
     stored in a file named file_name
 
-    :param columns: column name
+    :param columns: columns name
     :param filename: file name
     """
     d_frame = pd.DataFrame(columns=columns)
