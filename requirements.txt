@@ -23,3 +23,10 @@ six==1.14.0
 soupsieve==1.9.5
 urllib3==1.25.7
 yandex-geocoder==1.0.1
+geopandas=0.6.1
+gdal=2.3.3
+geopandas=0.6.1
+geos=3.7.1
+fiona=1.8.4
+matplotlib=3.0.2
+

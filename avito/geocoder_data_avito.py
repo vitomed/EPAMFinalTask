@@ -82,7 +82,6 @@ def add_new_columns(d_frame, list_lon_lat, columns_name):
     return d_frame_common_fin
 
 
-
 def main(c_abbr):
     """
     :param c_abbr: abbreviation of city
