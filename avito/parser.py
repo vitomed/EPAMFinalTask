@@ -1,23 +1,23 @@
-import pandas as pd
 import re
+import pandas as pd
 import requests
 from bs4 import BeautifulSoup as bs
 
 
-def create_colums(columns, f_name):
+def create_colums(columns, file_name):
     """
     An empty table is created with the column name,
     which are transferred to variable columns and
-    stored in a file named f_name
+    stored in a file named file_name
 
     :param columns: column name
     :param filename: file name
     """
-    df = pd.DataFrame(columns=columns)
-    df.to_csv(f_name, index=False)
+    d_frame = pd.DataFrame(columns=columns)
+    d_frame.to_csv(file_name, index=False)
 
 
-def first_pars(resp):
+def search_ads(resp):
     """
     Search advertisement for apartments for sale
 
@@ -28,93 +28,110 @@ def first_pars(resp):
     return soup.findAll("div", {"class": "item__line"})
 
 
-def second_pars(inner_info, city, pattern):
+def parsing_adv(advertisements, city, pattern):
     """
+    In each ad it is looking for an address,
+    cost of housing, area of an apartment
 
-    :param inner_info:
-    :param pattern:
-    :param city:
-    :return:
+    :param advertisements: list of found ads on the page
+    :param pattern: price search template
+    :param city: joins in order to determine the coordinates
+    :return: list with information about each home
     """
-    adddata = []
-    for info in inner_info:
-        address = info.findAll("span", {"class": "item-address__string"})
-        if not len(address):
+    apart_info = []
+
+    for ads in advertisements:
+        address = ads.findAll("span", {"class": "item-address__string"})
+
+        if not address:
             continue
 
-        price = info.findAll("span", {"class": "price"})
-        area = info.findAll("a", {"class": "snippet-link"})
+        price = ads.findAll("span", {"class": "price"})
+        area = ads.findAll("a", {"class": "snippet-link"})
         cost_of_housing = int("".join(re.findall(pattern, price[0].text)))
-
         try:
             area_m2 = float(area[0].text.split(",")[1][:-2].strip())
-        except Exception as e:
-            print(e)
+        except Exception as exp:
+            print(exp)
         else:
             cost_m2 = round(cost_of_housing / area_m2)
-            data = [f"{city}, {address[0].text.strip()}", area_m2, cost_m2]
-            print(data)
-            adddata.append(data)
-    return adddata
+            house_chars = [f"{city}, {address[0].text.strip()}", area_m2, cost_m2]
+            print(house_chars)
+            apart_info.append(house_chars)
+    return apart_info
 
 
-def saver(data, columns, f_name):
-    df = pd.DataFrame(data, columns=columns)
-    df = df.drop_duplicates("address")
-    df.to_csv(f_name, mode="a", header=False, index=False)
-
-
-def drop_addr_copy(df, column_name):
+def writer_apart_info(data_aparts, columns, file_name):
     """
-    Если есть необходимость оставить только уникальные адреса,
-    то воспользуйтесь этой функцией. Она удалит все повторения
-    встречающиеся в столбце address и оставит только уникальные
-    значения
+    Writes new data on apartments to the data apartsbase
 
-    :param data:
-    :param columns:
-    :param filename:
-    :return:
+    :param data_aparts: list of apatments info
+    :param columns: columns on data frame
+    :param file_name: name file for saving data frame
     """
-    df.drop_duplicates(column_name, inplace=True)
-    return df
+    d_frame = pd.DataFrame(data_aparts, columns=columns)
+    d_frame.drop_duplicates("address", inplace=True)
+    d_frame.to_csv(file_name, mode="a", header=False, index=False)
 
 
-def search_data(routs, city, concat_name, page):
-    url = f"https://www.avito.ru/{routs[city]}/kvartiry/prodam/monolitnyy_dom?s=104&p={page}"
+def drop_addr_copy(d_frame, column_name):
+    """
+    If you need to save only unique addresses,
+    then use this function. She will remove all repetitions.
+    occurring in the address column and will leave unique
+    values
+
+    :param d_frame: investigated data frame
+    :param column_name: column name to check
+    :return: updated data frame
+    """
+    d_frame.drop_duplicates(column_name, inplace=True)
+    return d_frame
+
+
+def search_data(routs, city_key, concat_name, page):
+    """
+    Finding home sales data on every page
+
+    :param routs: dictionary with urls
+    :param city_key: key to select the desired URL
+    :param concat_name: city name
+    :param page: investigated page
+    :return: set of information parameters about apartments
+    """
+    url = f"https://www.avito.ru/{routs[city_key]}/kvartiry/prodam/monolitnyy_dom?s=104&p={page}"
     session = requests.Session()
     resp = session.get(url, headers=HEADERS)
     try:
         assert resp.status_code == 200, f"NOTE! {resp.status_code}"
-    except Exception as e:
-        print(e)
+    except Exception as exp:
+        print(exp)
     else:
-        inner_info = first_pars(resp)
-        add_data = second_pars(inner_info, city=concat_name, pattern="\b+")
-        return add_data
+        ads = search_ads(resp=resp)
+        list_appart_info = parsing_adv(advertisements=ads, city=concat_name, pattern="\d+")
+        return list_appart_info
 
 
 def main(routs, columns, c_abr, r_name, curr_page, f_page):
     """
-
-    :param routs:
-    :param columns:
-    :param c_abr:
-    :param r_name:
-    :param curr_page:
-    :param f_page:
-    :return:
+    :param routs: dictionary with urls
+    :param columns: columns on data frame
+    :param c_abr: city abbreviation
+    :param r_name: russian name of the city
+    :param curr_page: start page for searching
+    :param f_page: finish page
     """
     f_name = f"{c_abr}/{c_abr}_addr_area_price.csv"
-    create_colums(columns, f_name=f_name)
+    create_colums(columns=columns, file_name=f_name)
+
     while curr_page < f_page:
-        data_list = search_data(routs, page=curr_page, city=f"{c_abr}", concat_name=f"{r_name}")
-        saver(data_list, columns, f_name)
+        data_list = search_data(routs, page=curr_page, city_key=f"{c_abr}", concat_name=f"{r_name}")
+        writer_apart_info(data_aparts=data_list, columns=columns, file_name=f_name)
         print("page", curr_page)
         curr_page += 1
 
-    df = pd.read_csv(f_name, sep=",")
-    updated_df = drop_addr_copy(df, column_name="address")
+    created_df = pd.read_csv(f_name, sep=",")
+    updated_df = drop_addr_copy(created_df, column_name="address")
     updated_df.to_csv(f"{c_abr}/{c_abr}_updated_df.csv", index=False)
 
 
@@ -133,10 +150,13 @@ if __name__ == "__main__":
                       '20100101 Firefox/71.0',
     }
 
-    city_routs = {"SPb": "sankt-peterburg", "MSK": "moskva", "EKB": "ekaterinburg"}
+    CITY_ROUTS = {"SPb": "sankt-peterburg", "MSK": "moskva", "EKB": "ekaterinburg"}
+    FRAME_COLUMNS = ["address", "area", "price"]
 
-    columns = ["address", "area", "price"]
 
-    # main(routs=city_routs, columns=columns, c_abr="SPb", r_name="Санкт-Петербург", curr_page=1, f_page=100)
-    # main(routs=city_routs, columns=columns, c_abr="MSK", r_name="Москва", curr_page=1, f_page=100)
-    # main(routs=city_routs, columns=columns, c_abr="EKB", r_name="Екатеринбург", curr_page=1, f_page=100)
+    # main(routs=CITY_ROUTS, columns=FRAME_COLUMNS, c_abr="SPb",
+    #      r_name="Санкт-Петербург", curr_page=1, f_page=100)
+    # main(routs=CITY_ROUTS, columns=FRAME_COLUMNS, c_abr="MSK",
+    #      r_name="Москва", curr_page=1, f_page=100)
+    # main(routs=CITY_ROUTS, columns=FRAME_COLUMNS, c_abr="EKB",
+    #      r_name="Екатеринбург", curr_page=1, f_page=100)
