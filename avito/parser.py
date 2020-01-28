@@ -28,7 +28,7 @@ def search_ads(resp):
     return soup.findAll("div", {"class": "item__line"})
 
 
-def parsing_adv(advertisements, city, pattern):
+def parsing_ads(advertisements, city):
     """
     In each ad it is looking for an address,
     cost of housing, area of an apartment
@@ -39,6 +39,7 @@ def parsing_adv(advertisements, city, pattern):
     :return: list with information about each home
     """
     apart_info = []
+    pattern = "\d+"
 
     for ads in advertisements:
         address = ads.findAll("span", {"class": "item-address__string"})
@@ -56,7 +57,6 @@ def parsing_adv(advertisements, city, pattern):
         else:
             cost_m2 = round(cost_of_housing / area_m2)
             house_chars = [f"{city}, {address[0].text.strip()}", area_m2, cost_m2]
-            print(house_chars)
             apart_info.append(house_chars)
     return apart_info
 
@@ -70,7 +70,6 @@ def writer_apart_info(data_aparts, columns, file_name):
     :param file_name: name file for saving data frame
     """
     d_frame = pd.DataFrame(data_aparts, columns=columns)
-    d_frame.drop_duplicates("address", inplace=True)
     d_frame.to_csv(file_name, mode="a", header=False, index=False)
 
 
@@ -108,7 +107,7 @@ def search_data(routs, city_key, concat_name, page):
         print(exp)
     else:
         ads = search_ads(resp=resp)
-        list_appart_info = parsing_adv(advertisements=ads, city=concat_name, pattern="\d+")
+        list_appart_info = parsing_ads(advertisements=ads, city=concat_name)
         return list_appart_info
 
 
@@ -125,14 +124,14 @@ def main(routs, columns, c_abr, r_name, curr_page, f_page):
     create_colums(columns=columns, file_name=f_name)
 
     while curr_page < f_page:
+        print("page", curr_page)
         data_list = search_data(routs, page=curr_page, city_key=f"{c_abr}", concat_name=f"{r_name}")
         writer_apart_info(data_aparts=data_list, columns=columns, file_name=f_name)
-        print("page", curr_page)
         curr_page += 1
 
-    created_df = pd.read_csv(f_name, sep=",")
-    updated_df = drop_addr_copy(created_df, column_name="address")
-    updated_df.to_csv(f"{c_abr}/{c_abr}_updated_df.csv", index=False)
+    # created_df = pd.read_csv(f_name, sep=",")
+    # updated_df = drop_addr_copy(created_df, column_name="address")
+    # updated_df.to_csv(f"{c_abr}/{c_abr}_updated_df.csv", index=False)
 
 
 if __name__ == "__main__":
@@ -154,8 +153,8 @@ if __name__ == "__main__":
     FRAME_COLUMNS = ["address", "area", "price"]
 
 
-    # main(routs=CITY_ROUTS, columns=FRAME_COLUMNS, c_abr="SPb",
-    #      r_name="Санкт-Петербург", curr_page=1, f_page=100)
+    main(routs=CITY_ROUTS, columns=FRAME_COLUMNS, c_abr="SPb",
+         r_name="Санкт-Петербург", curr_page=1, f_page=100)
     # main(routs=CITY_ROUTS, columns=FRAME_COLUMNS, c_abr="MSK",
     #      r_name="Москва", curr_page=1, f_page=100)
     # main(routs=CITY_ROUTS, columns=FRAME_COLUMNS, c_abr="EKB",

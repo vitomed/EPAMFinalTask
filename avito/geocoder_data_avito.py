@@ -1,4 +1,5 @@
 import pandas as pd
+from requests.exceptions import ConnectionError
 from yandex_geocoder import Client
 from yandex_geocoder.exceptions import YandexGeocoderAddressNotFound
 
@@ -16,7 +17,7 @@ def get_addr(file_name):
     return addr, d_frame
 
 
-def lon_lat_handler(client, addr):
+def get_lon_lat_coord(client, addr):
     """
     Sends a get request in whose body the home address
 
@@ -28,7 +29,8 @@ def lon_lat_handler(client, addr):
         answer = client.coordinates(addr)
     except YandexGeocoderAddressNotFound:
         answer = (None, None)
-
+    except ConnectionError:
+        return "ConnectionError"
     return answer
 
 
@@ -44,7 +46,12 @@ def create_list_lon_lat(addresses, client):
     add_lon_lat = []
     count = 0
     for adr in addresses:
-        latitude_longtitude = lon_lat_handler(client, adr)
+        latitude_longtitude = get_lon_lat_coord(client, adr)
+        if latitude_longtitude == "ConnectionError":
+            print("ConnectionError")
+            add_lon_lat.append([None, None])
+            continue
+
         lon_lat = [latitude_longtitude[1], latitude_longtitude[0]]
         add_lon_lat.append(lon_lat)
         count += 1
@@ -112,6 +119,8 @@ if __name__ == "__main__":
     setattr(Client, "API_URL", API_URL)
 
     city_abbr_exmpl = ["SPb", "MSK", "EKB"]
-    # main("SPb")
+    main("SPb")
     # main("MSK")
     # main("EKB")
+    # df = pd.read_csv("SPb/SPb_lon_lat.csv", sep=",")
+    # print(df)
