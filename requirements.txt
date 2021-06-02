@@ -21,6 +21,6 @@ requests==2.22.0
 Shapely==1.6.4.post2
 six==1.14.0
 soupsieve==1.9.5
-urllib3==1.25.7
+urllib3==1.26.5
 yandex-geocoder==1.0.1
 
